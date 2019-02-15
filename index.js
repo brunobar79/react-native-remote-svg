@@ -1,5 +1,6 @@
 import React from 'react';
 import { Image } from 'react-native';
+import FadeIn from 'react-native-fade-in-image';
 import resolveAssetSource from 'react-native/Libraries/Image/resolveAssetSource';
 import SvgImage from './SvgImage';
 
@@ -17,6 +18,9 @@ const MyImage = props => {
     }
     return <SvgImage {...props} source={source} style={style} />;
   } else {
+    if(props.fadeIn){
+      return <FadeIn placeholderStyle={props.placeholderStyle}><Image {...props} /></FadeIn>;
+    }
     return <Image {...props} />;
   }
 };

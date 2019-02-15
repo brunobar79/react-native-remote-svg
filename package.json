@@ -10,7 +10,8 @@
   "license": "MIT",
   "peerDependencies": {
     "react": ">=15",
-    "react-native": ">=0.48"
+    "react-native": ">=0.48",
+    "react-native-fade-in-image": "1.4.1"
   },
   "keywords": [
     "react-native",
