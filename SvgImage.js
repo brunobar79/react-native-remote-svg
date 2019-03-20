@@ -1,7 +1,9 @@
 // @flow
 
 import React, { Component } from 'react';
-import { View, WebView, Platform } from 'react-native';
+import { WebView, View, Platform } from 'react-native';
+import Web3Webview from 'react-native-web3-webview';
+
 
 const firstHtml =
   '<html><head><style>html, body { margin:0; padding:0; overflow:hidden; background-color: transparent; } svg { position:fixed; top:0; left:0; height:100%; width:100% }</style></head><body>';
@@ -10,8 +12,10 @@ const lastHtml = '</body></html>';
 class SvgImage extends Component {
   state = { fetchingUrl: null, svgContent: null };
   componentDidMount() {
-    this.doFetch(this.props);
+	this.doFetch(this.props);
+	this.mounted = true;
   }
+
   componentWillReceiveProps(nextProps) {
     const prevUri = this.props.source && this.props.source.uri;
     const nextUri = nextProps.source && nextProps.source.uri;
@@ -20,33 +24,43 @@ class SvgImage extends Component {
       this.doFetch(nextProps);
     }
   }
+
+  componentWillUnmount(){
+	  this.mounted = false;
+  }
+
   doFetch = async props => {
     let uri = props.source && props.source.uri;
     if (uri) {
       props.onLoadStart && props.onLoadStart();
       if (uri.match(/^data:image\/svg/)) {
         const index = uri.indexOf('<svg');
-        this.setState({ fetchingUrl: uri, svgContent: uri.slice(index) });
+        this.mounted && this.setState({ fetchingUrl: uri, svgContent: uri.slice(index) });
       } else {
         try {
           const res = await fetch(uri);
           const text = await res.text();
-          this.setState({ fetchingUrl: uri, svgContent: text });
+          this.mounted && this.setState({ fetchingUrl: uri, svgContent: text });
         } catch (err) {
           console.error('got error', err);
         }
       }
-      props.onLoadEnd && props.onLoadEnd();
+      this.mounted && props.onLoadEnd && props.onLoadEnd();
     }
   };
   render() {
     const props = this.props;
     const { svgContent } = this.state;
-    if (svgContent) {
-      const html = `${firstHtml}${svgContent}${lastHtml}`;
-      return (
+
+	if (svgContent) {
+
+	  const WebviewComponent = (Platform.OS === 'ios' ? WebView : Web3Webview);
+
+	  const html = `${firstHtml}${svgContent}${lastHtml}`;
+
+	  return (
         <View pointerEvents="none" style={[props.style, props.containerStyle]}>
-          <WebView
+          <WebviewComponent
             originWhitelist={['*']}
             scalesPageToFit={true}
             style={[
