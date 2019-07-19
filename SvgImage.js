@@ -55,9 +55,19 @@ class SvgImage extends Component {
 	if (svgContent) {
 
 	  const WebviewComponent = (Platform.OS === 'ios' ? WebView : Web3Webview);
-
-	  const html = `${firstHtml}${svgContent}${lastHtml}`;
-
+    let html
+    if (svgContent.includes('viewBox')){
+      html = `${firstHtml}${svgContent}${lastHtml}`;
+    } else {
+      const svgRegex = RegExp('(<svg)([^<]*|[^>]*)')
+      const svg = svgRegex.exec(svgContent)[0]
+      const regex = new RegExp('[\\s\\r\\t\\n]*([a-z0-9\\-_]+)[\\s\\r\\t\\n]*=[\\s\\r\\t\\n]*([\'"])((?:\\\\\\2|(?!\\2).)*)\\2', 'ig');
+      const attributes = {}
+      while ((match = regex.exec(svg))) {
+        attributes[match[1]] = match[3];
+      }
+      html = `${firstHtml}${svgContent.substr(0,5) + `viewBox="0 0 ${attributes.width} ${attributes.height}"` + svgContent.substr(5)}${lastHtml}`;
+    }
 	  return (
         <View pointerEvents="none" style={[props.style, props.containerStyle]}>
           <WebviewComponent
