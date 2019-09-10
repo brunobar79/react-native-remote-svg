@@ -1,8 +1,8 @@
 // @flow
 
 import React, { Component } from 'react';
-import { WebView, View, Platform } from 'react-native';
-import Web3Webview from 'react-native-web3-webview';
+import { View, Platform } from 'react-native';
+import { WebView }  from 'react-native-webview';
 
 
 const firstHtml =
@@ -54,7 +54,6 @@ class SvgImage extends Component {
 
 	if (svgContent) {
 
-	  const WebviewComponent = (Platform.OS === 'ios' ? WebView : Web3Webview);
     let html
     if (svgContent.includes('viewBox')){
       html = `${firstHtml}${svgContent}${lastHtml}`;
@@ -70,7 +69,7 @@ class SvgImage extends Component {
     }
 	  return (
         <View pointerEvents="none" style={[props.style, props.containerStyle]}>
-          <WebviewComponent
+          <WebView
             originWhitelist={['*']}
             scalesPageToFit={true}
             style={[
