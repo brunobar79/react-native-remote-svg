@@ -35,6 +35,7 @@ const getHTML = (svgContent, style) => `
 class SvgImage extends Component {
   state = { fetchingUrl: null, svgContent: null };
   componentDidMount() {
+	this.mounted = true;
     this.doFetch(this.props);
   }
   componentWillReceiveProps(nextProps) {
@@ -51,17 +52,17 @@ class SvgImage extends Component {
       props.onLoadStart && props.onLoadStart();
       if (uri.match(/^data:image\/svg/)) {
         const index = uri.indexOf('<svg');
-        this.setState({ fetchingUrl: uri, svgContent: uri.slice(index) });
+        this.mounted && this.setState({ fetchingUrl: uri, svgContent: uri.slice(index) });
       } else {
         try {
           const res = await fetch(uri);
           const text = await res.text();
-          this.setState({ fetchingUrl: uri, svgContent: text });
+          this.mounted && this.setState({ fetchingUrl: uri, svgContent: text });
         } catch (err) {
           console.error('got error', err);
         }
       }
-      props.onLoadEnd && props.onLoadEnd();
+      this.mounted && props.onLoadEnd && props.onLoadEnd();
     }
   };
   render() {
@@ -69,13 +70,28 @@ class SvgImage extends Component {
     const { svgContent } = this.state;
     if (svgContent) {
       const flattenedStyle = StyleSheet.flatten(props.style) || {};
-      const html = getHTML(svgContent, flattenedStyle);
+	  let html;
+	  if (svgContent.includes('viewBox')){
+		html = getHTML(svgContent, flattenedStyle);
+	  } else {
+		const svgRegex = RegExp('(<svg)([^<]*|[^>]*)')
+		const svg = svgRegex.exec(svgContent)[0]
+		const regex = new RegExp('[\\s\\r\\t\\n]*([a-z0-9\\-_]+)[\\s\\r\\t\\n]*=[\\s\\r\\t\\n]*([\'"])((?:\\\\\\2|(?!\\2).)*)\\2', 'ig');
+		const attributes = {}
+		let match;
+		while ((match = regex.exec(svg))) {
+		  attributes[match[1]] = match[3];
+		}
+		const patchedSvgContent = `${svgContent.substr(0,5) + `viewBox="0 0 ${attributes.width} ${attributes.height}"` + svgContent.substr(5)}`;
+		html = getHTML(patchedSvgContent, flattenedStyle);
+	  }
+
 
       return (
         <View pointerEvents="none" style={[props.style, props.containerStyle]}>
           <WebView
             originWhitelist={['*']}
-            scalesPageToFit={true}
+            scalesPageToFit
             useWebKit={false}
             style={[
               {
