@@ -36,9 +36,14 @@ const getHTML = (svgContent, style) => `
 class SvgImage extends Component {
   state = { fetchingUrl: null, svgContent: null };
   componentDidMount() {
-	this.mounted = true;
+	  this.mounted = true;
     this.doFetch(this.props);
   }
+
+  componentWillUnmount(){
+    this.mounted = false;
+  }
+
   componentWillReceiveProps(nextProps) {
     const prevUri = this.props.source && this.props.source.uri;
     const nextUri = nextProps.source && nextProps.source.uri;
@@ -47,6 +52,7 @@ class SvgImage extends Component {
       this.doFetch(nextProps);
     }
   }
+
   doFetch = async props => {
     let uri = props.source && props.source.uri;
     if (uri) {
@@ -71,20 +77,20 @@ class SvgImage extends Component {
     const { svgContent } = this.state;
     if (svgContent) {
       const flattenedStyle = StyleSheet.flatten(props.style) || {};
-	  let html;
+	    let html;
 	  if (svgContent.includes('viewBox')){
-		html = getHTML(svgContent, flattenedStyle);
+		  html = getHTML(svgContent, flattenedStyle);
 	  } else {
-		const svgRegex = RegExp('(<svg)([^<]*|[^>]*)')
-		const svg = svgRegex.exec(svgContent)[0]
-		const regex = new RegExp('[\\s\\r\\t\\n]*([a-z0-9\\-_]+)[\\s\\r\\t\\n]*=[\\s\\r\\t\\n]*([\'"])((?:\\\\\\2|(?!\\2).)*)\\2', 'ig');
-		const attributes = {}
-		let match;
-		while ((match = regex.exec(svg))) {
-		  attributes[match[1]] = match[3];
-		}
-		const patchedSvgContent = `${svgContent.substr(0,5) + `viewBox="0 0 ${attributes.width} ${attributes.height}"` + svgContent.substr(5)}`;
-		html = getHTML(patchedSvgContent, flattenedStyle);
+      const svgRegex = RegExp('(<svg)([^<]*|[^>]*)')
+      const svg = svgRegex.exec(svgContent)[0]
+      const regex = new RegExp('[\\s\\r\\t\\n]*([a-z0-9\\-_]+)[\\s\\r\\t\\n]*=[\\s\\r\\t\\n]*([\'"])((?:\\\\\\2|(?!\\2).)*)\\2', 'ig');
+      const attributes = {}
+      let match;
+      while ((match = regex.exec(svg))) {
+        attributes[match[1]] = match[3];
+      }
+      const patchedSvgContent = `${svgContent.substr(0,5) + `viewBox="0 0 ${attributes.width} ${attributes.height}"` + svgContent.substr(5)}`;
+      html = getHTML(patchedSvgContent, flattenedStyle);
 	  }
 
 
